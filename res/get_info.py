@@ -1,6 +1,5 @@
 import requests
 from headers import read_headers
-from res.url_param_splice import splicing
 
 
 headers = read_headers()
@@ -52,44 +51,17 @@ def get_illust_ids(uid: str, lang: str = "zh") -> list:
     return illust_ids
 
 
-def get_illust_info(uid: str, lang: str = "zh") -> dict:
-    """ 获取插画信息。
-    :param uid: 用户 ID (str)
-    :param lang: 语言选项，默认为中文 (str)
-    :return: 返回目标用户所有的插画信息字典
-    """
-    url = f"https://www.pixiv.net/ajax/user/{uid}/profile/illusts?{splicing(get_illust_ids(uid, lang))}"
-    headers["Referer"] = f"https://www.pixiv.net/users/{uid}/artworks"
-    body = get_body(url, headers, "get illust info")
-    works = body.get("works")
-    return dict(works)
-
-
-def get_illust_sum(uid: str, lang: str = "zh") -> int:
-    """ 获取插画总数
-    :param uid: 用户 ID (str)
-    :param lang: 语言选项，默认为中文 (str)
-    :return: 插画总数
-    """
-    illust_sum = 0
-    works = get_illust_info(uid, lang)
-    illust_ids = get_illust_ids(uid, lang)
-    for id in illust_ids:
-        illust_sum += works[id]["pageCount"]
-    return int(illust_sum)
-
-
 def get_illust_url(illust_id: str, lang: str = "zh") -> list:
     """ 获取插画原图链接。
     :param uid: 插画 ID (str)
     :param lang: 语言选项，默认为中文 (str)
     :return: url 列表， url 数量
     """
+    originals = []
     url = f"https://www.pixiv.net/ajax/illust/{illust_id}?lang={lang}"
     headers["Referer"] = f"https://www.pixiv.net/artworks/{illust_id}"
     body = get_body(url, headers, "get illust info")
     page_count = body.get("pageCount")
-    originals = []
     if page_count == 1:
         try:
             originals.append(body.get("urls", {}).get("original"))
