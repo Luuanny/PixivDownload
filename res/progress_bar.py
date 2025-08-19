@@ -1,10 +1,12 @@
 from sys import stdout
 
+
 # ======================
 # 进度条组件
 # ======================
 
-def progress_bar(current: int, total: int, bar_length:int = 50, show_count=True, fill_char="█", empty_char="-", prefix="", suffix=" "):
+def progress_bar(current: int, total: int, bar_length: int = 50, show_count=True, fill_char="█", empty_char="-",
+                 prefix="", suffix=" "):
     """ 通用进度条显示函数。
     :param current: 当前进度 (int)
     :param total:   总进度 (int)
