@@ -24,20 +24,7 @@ def get_body(url: str, headers: dict, get_info: str = "get body") -> Any | None:
     return body
 
 
-def get_user_name(uid: str, lang: str = "zh") -> str:
-    """ 获取Pixiv用户信息。
-    :param uid: 用户 ID (str)
-    :param lang: 语言选项，默认为中文 (str)
-    :return: 返回用户名，如果获取失败则返回 "unknown"
-    """
-    url = f"https://www.pixiv.net/ajax/user/{uid}?full=1&lang={lang}"
-    local_headers["Referer"] = f"https://www.pixiv.net/users/{uid}/artworks"
-    body = get_body(url, local_headers, "get user info")
-    user_name = body.get("name")
-    return user_name
-
-
-def get_illust_ids(uid: str, lang: str = "zh") -> list:
+def get_illust_ids1(uid: str, lang: str = "zh") -> list:
     """ 获取指定用户所有插画 ID 列表。
     :param uid: 用户 ID (str)
     :param lang: 语言选项，默认为中文 (str)
@@ -50,7 +37,19 @@ def get_illust_ids(uid: str, lang: str = "zh") -> list:
     return illust_ids
 
 
-def get_illust_url(illust_id: str, lang: str = "zh") -> list[Any] | tuple[list[Any], int]:
+def get_illust_ids2() -> list:
+    origin_ids: list = []
+    while True:
+        illust_id: str = input("请输入图片 id (留空退出):").strip().lower()
+        match illust_id:
+            case "":
+                ids: list[str] = list(dict.fromkeys(origin_ids))
+                return ids
+            case _:
+                origin_ids.append(illust_id)
+
+
+def get_illust_url(illust_id: str, lang: str = "zh") -> tuple[list[str], int, str]:
     """ 获取插画原图链接。
     :param illust_id: 插画 ID (str)
     :param lang: 语言选项，默认为中文 (str)
@@ -60,6 +59,7 @@ def get_illust_url(illust_id: str, lang: str = "zh") -> list[Any] | tuple[list[A
     url = f"https://www.pixiv.net/ajax/illust/{illust_id}?lang={lang}"
     local_headers["Referer"] = f"https://www.pixiv.net/artworks/{illust_id}"
     body = get_body(url, local_headers, "get illust info")
+    user_name = body.get("userName")
     page_count = body.get("pageCount")
     if page_count == 1:
         try:
@@ -70,10 +70,10 @@ def get_illust_url(illust_id: str, lang: str = "zh") -> list[Any] | tuple[list[A
         url = f"https://www.pixiv.net/ajax/illust/{illust_id}/pages?lang={lang}"
         body = get_body(url, local_headers, "get multi-page illust info")
         if not body:
-            return []
+            return [], 0, user_name
         try:
             for page in body:
                 originals.append(page.get("urls", {}).get("original"))
         except Exception as e:
             print("get original error: ", e)
-    return originals, len(originals)
+    return originals, len(originals), user_name

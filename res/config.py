@@ -1,20 +1,23 @@
 import json
 import os
-from typing import Any
-
-from res.ask_info import ask_input
 
 
-def reconfig() -> None:
+def show_config() -> None:
+    """ 显示当前 config 配置 """
     check_config()
-    if ask_input("是否重新输入？"):
-        config: dict = {}
-        os.system('cls' if os.name == 'nt' else 'clear')
-        config["Headers"] = get_headers()
-        config["SavePath"] = input_save_path()
-        write_config(config)
-        print(f"当前 config:\n{json.dumps(config, ensure_ascii=False, indent=2)}")
+    config = read_config()
+    print(f"当前 config.json 如下：\n{json.dumps(config, ensure_ascii=False, indent=2)}")
     return None
+
+
+def reconfig() -> dict:
+    """ 重新配置 config """
+    config: dict = {
+        "Headers": get_headers(),
+        "SavePath": get_save_path()
+    }
+    write_config(config)
+    return config
 
 
 def get_headers() -> dict:
@@ -28,6 +31,16 @@ def get_headers() -> dict:
     }
 
 
+def get_save_path() -> str:
+    """ 获取保存路径
+    :return: 保存路径 (str)
+    """
+    save_path: str = input("请输入保存路径 (留空使用默认值)：").strip()
+    if not save_path:
+        save_path = "Download"
+    return save_path
+
+
 def input_user_agent() -> str:
     """ 获取 User_agent
     :return: User_agent (str)
@@ -35,7 +48,6 @@ def input_user_agent() -> str:
     user_agent: str = input("请输入 User_agent (留空使用默认值): ").strip()
     if not user_agent:
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
-    os.system('cls' if os.name == 'nt' else 'clear')
     return user_agent
 
 
@@ -46,7 +58,6 @@ def input_referer() -> str:
     referer: str = input("请输入 Referer (留空使用默认值): ").strip()
     if not referer:
         referer = "https://www.pixiv.net/"
-    os.system('cls' if os.name == 'nt' else 'clear')
     return referer
 
 
@@ -57,61 +68,46 @@ def input_cookie() -> str:
     cookie: str = input("请输入 Cookie (可留空，留空可能导致图片下载不完全): ").strip()
     if not cookie:
         cookie = ""
-    os.system('cls' if os.name == 'nt' else 'clear')
     return cookie
-
-
-def input_save_path() -> str:
-    """ 获取保存路径
-    :return: 保存路径 (str)
-    """
-    save_path: str = input("请输入保存路径 (留空使用默认值)：").strip()
-    if not save_path:
-        save_path = "Download"
-    os.system('cls' if os.name == 'nt' else 'clear')
-    return save_path
 
 
 def check_config() -> None:
     """ 检查 config.json 是否存在，不存在则交互生成 """
     if not os.path.exists("config.json"):
         print("config.json 文件不存在，将为你生成新的 config.json...")
-        config = {
-            "Headers": get_headers(),
-            "SavePath": input_save_path()
-        }
-        write_config(config)
-        print(f"生成的 config.json 内容如下：\n{json.dumps(config, ensure_ascii=False, indent=2)}")
+        reconfig()
     return None
 
 
-def read_headers() -> dict | Any:
-    """ 从 config.json 文件中读取 Headers。
-    :return: Headers 字典 (dict)
+def read_config() -> dict:
+    """ 读取 config.json 文件配置
+    :return: config (dict)
     """
     check_config()
     try:
         with open("config.json", "r", encoding="utf-8") as f:
             config = json.load(f)
-            headers = config["Headers"]
-    except Exception as e:
-        print(f"读取 headers 失败: {e}")
-        headers = get_headers()
+    except FileNotFoundError as e:
+        print(f"读取 config 失败：{e}")
+        config = reconfig()
+    return config
+
+
+def read_headers() -> dict:
+    """ 从 config.json 文件中读取 Headers。
+    :return: headers 字典 (dict)
+    """
+    config = read_config()
+    headers = config["Headers"]
     return headers
 
 
-def read_save_path() -> str | Any:
+def read_save_path() -> str:
     """ 从 config.json 文件中读取 save_path。
     :return: 保存路径 (str)
     """
-    check_config()
-    try:
-        with open("config.json", "r", encoding="utf-8") as f:
-            config = json.load(f)
-            save_path = config["SavePath"]
-    except Exception as e:
-        print(f"读取 save_path 失败：{e}")
-        save_path = input_save_path()
+    config = read_config()
+    save_path = config["SavePath"]
     return save_path
 
 
@@ -126,8 +122,3 @@ def write_config(config: dict) -> None:
     except Exception as e:
         print(f"写入 config.json 失败: {e}")
     return None
-
-
-if __name__ == "__main__":
-    os.system('cls' if os.name == 'nt' else 'clear')
-    reconfig()
