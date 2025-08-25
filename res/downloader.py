@@ -69,6 +69,8 @@ def load_illust(illust_ids: list, lang: str = "zh") -> dict:
     illust_count: list[int] = [0]
     for illust_id, current in zip(illust_ids, range(1, len(illust_ids) + 1)):
         url, count, user_name = get_illust_url(illust_id, lang)
+        if not url:
+            continue
         urls.setdefault(user_name, []).extend(url)
         illust_count[0] += count
         progress_bar(current, len(illust_ids), prefix="正在加载插画链接")
@@ -102,8 +104,8 @@ def save_illust(url: str, user_name: str, max_retry: int = 1) -> tuple[int, str]
     download_count: int = 0
     download_info: str = ""
     illust_name = url.split("/")[-1]
-
-    save_path = os.path.join(save_dir(user_name), illust_name)
+    dir_name = save_dir(user_name)
+    save_path = os.path.join(dir_name, illust_name)
     if os.path.exists(save_path):
         download_count = 1
         download_info = f"{save_path} 文件已存在，跳过下载"
@@ -134,6 +136,6 @@ def save_dir(user_name: str) -> str:
         if user_dir != user_name:
             break
     father_dir = read_save_path()
-    save_directory: str = f"{father_dir}\\{user_dir}"
+    save_directory = f"{father_dir}\\{user_dir}"
     os.makedirs(save_directory, exist_ok=True)  # 创建目录，如果已存在则不报错
     return save_directory
